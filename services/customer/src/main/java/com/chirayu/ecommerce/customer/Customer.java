@@ -1,6 +1,5 @@
 package com.chirayu.ecommerce.customer;
 
-import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +18,6 @@ public class Customer {
     private String id;
     private String firstname;
     private String lastname;
-    @Email
     private String email;
     private Address address;
 }
