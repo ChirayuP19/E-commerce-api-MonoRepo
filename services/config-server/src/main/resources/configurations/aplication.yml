@@ -2,6 +2,11 @@ spring:
   cloud:
     config:
       override-system-properties: false
+  observations:
+    http:
+      server:
+        requests:
+          ignore-patterns: /actuator/**
 eureka:
   instance:
     hostname: localhost

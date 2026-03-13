@@ -1,6 +1,7 @@
 package com.chirayu.ecommerce.exceptionhandler;
 
 import com.chirayu.ecommerce.dto.ErrorResponse;
+import com.chirayu.ecommerce.exception.CustomerExistException;
 import com.chirayu.ecommerce.exception.CustomerNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(exp.getMsg());
+    }
+    @ExceptionHandler(CustomerExistException.class)
+    public ResponseEntity<String> handle(CustomerExistException exp){
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(exp.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

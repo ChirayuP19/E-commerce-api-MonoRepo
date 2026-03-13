@@ -3,12 +3,14 @@ package com.chirayu.ecommerce.service;
 import com.chirayu.ecommerce.customer.Customer;
 import com.chirayu.ecommerce.dto.CustomerRequest;
 import com.chirayu.ecommerce.dto.CustomerResponse;
+import com.chirayu.ecommerce.exception.CustomerExistException;
 import com.chirayu.ecommerce.exception.CustomerNotFoundException;
 import com.chirayu.ecommerce.mapper.CustomerMapper;
 import com.chirayu.ecommerce.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.List;
 
@@ -23,6 +25,9 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public String createCustomer(CustomerRequest request) {
+        if(customerRepository.existsByEmail(request.email())){
+            throw new CustomerExistException(request.email()+" is already exist");
+        }
         var customer = customerRepository.save(mapper.toCustomer(request));
         return customer.getId();
     }

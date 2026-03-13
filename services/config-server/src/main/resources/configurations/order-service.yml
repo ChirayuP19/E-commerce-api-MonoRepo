@@ -25,7 +25,10 @@ application:
     customer-url: http://localhost:8222/api/v1/customers
     product-url: http://localhost:8222/api/v1/products
     payment-url: http://localhost:8222/api/v1/payments
-logging:
-  level:
-    org.springframework.cloud.gateway: DEBUG
-    reactor.netty: DEBUG
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
