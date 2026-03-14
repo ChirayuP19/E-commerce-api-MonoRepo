@@ -42,4 +42,10 @@ public class ProductController {
     public ResponseEntity<List<ProductResponse>> findAll() {
         return new ResponseEntity<>(productService.findAll(), HttpStatus.OK);
     }
+
+    @PatchMapping("/{product-id}/{quantity}")
+    public ResponseEntity<String> updateProductQuantity(@PathVariable("product-id") Long productId,
+                                                       @PathVariable("quantity") double quantityToAdd){
+        return new ResponseEntity<>(productService.addQuantity(productId,quantityToAdd),HttpStatus.OK);
+    }
 }
