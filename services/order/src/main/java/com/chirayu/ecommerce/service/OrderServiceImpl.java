@@ -1,21 +1,21 @@
 package com.chirayu.ecommerce.service;
 
-import com.chirayu.ecommerce.customer.CustomerClient;
+import com.chirayu.ecommerce.customer.CustomerServiceClient;
 import com.chirayu.ecommerce.dto.OrderRequest;
 import com.chirayu.ecommerce.dto.OrderResponse;
 import com.chirayu.ecommerce.dto.PurchaseRequest;
-import com.chirayu.ecommerce.exception.BusinessException;
 import com.chirayu.ecommerce.kafka.OrderConfirmation;
 import com.chirayu.ecommerce.kafka.OrderProducer;
-import com.chirayu.ecommerce.payment.PaymentClient;
 import com.chirayu.ecommerce.payment.PaymentRequest;
+import com.chirayu.ecommerce.payment.PaymentServiceClient;
+import com.chirayu.ecommerce.product.ProductClientImpl;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import com.chirayu.ecommerce.mapper.OrderMapper;
 import com.chirayu.ecommerce.orderline.OrderLineRequest;
 import org.springframework.stereotype.Service;
-import com.chirayu.ecommerce.product.ProductClient;
 import com.chirayu.ecommerce.repository.OrderRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,20 +25,19 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
-    private final CustomerClient customerClient;
-    private final ProductClient productClient;
-    private final PaymentClient paymentClient;
+    private final CustomerServiceClient customerServiceClient;
+    private final ProductClientImpl productClient;
+    private final PaymentServiceClient paymentServiceClient;
     private final OrderRepository orderRepository;
     private final OrderMapper mapper;
     private final OrderLineService orderLineService;
     private final OrderProducer orderProducer;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long createOrder(OrderRequest orderRequest) {
-        var customer = customerClient.findCustomerFindById(orderRequest.customerId())
-                .orElseThrow(() ->
-                        new BusinessException("Cannot create order:: No Customer exists with the provided customer ID:: " + orderRequest.customerId()));
-        var purchaseProduct = this.productClient.purchaseProduct(orderRequest.products());
+        var customer = customerServiceClient.findCustomerById(orderRequest.customerId());
+        var purchaseProduct = productClient.purchaseProduct(orderRequest.products());
         var reference= UUID.randomUUID().toString();
         var totalAmount= purchaseProduct.stream()
                 .map(p->p.price().multiply(BigDecimal.valueOf(p.quantity())))
@@ -57,14 +56,15 @@ public class OrderServiceImpl implements OrderService {
                     )
             );
         }
-        var paymentRequest = new PaymentRequest(
+
+        paymentServiceClient.requestPayment(new PaymentRequest(
+                null,
                 totalAmount,
                 orderRequest.paymentMethod(),
                 order.getId(),
                 reference,
                 customer
-        );
-        paymentClient.requestOrderPayment(paymentRequest);
+        ));
 
         orderProducer.sendOrderConfirmation(
                 new OrderConfirmation(
@@ -93,4 +93,5 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(()->new EntityNotFoundException(String.format("No order found with the provided ID: %d",orderId)));
 
     }
+
 }

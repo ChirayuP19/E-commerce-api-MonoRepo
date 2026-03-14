@@ -9,6 +9,10 @@ spring:
       ddl-auto: update
     database: POSTGRESQL
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: false
   kafka:
     producer:
       bootstrap-servers:
@@ -22,13 +26,79 @@ server:
 
 application:
   config:
-    customer-url: http://localhost:8222/api/v1/customers
-    product-url: http://localhost:8222/api/v1/products
-    payment-url: http://localhost:8222/api/v1/payments
+    customer-url: http://localhost:8090/api/v1/customers
+    product-url: http://localhost:8050/api/v1/products
+    payment-url: http://localhost:8060/api/v1/payments
 management:
+  endpoints:
+    web:
+      exposure:
+        include: health, circuitbreakers, circuitbreakerevents
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+  health:
+    circuitbreakers:
+      enabled: true
   tracing:
     sampling:
       probability: 1.0
   zipkin:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans
+resilience4j:
+  circuitbreaker:
+    instances:
+      product-service:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+        record-exceptions:
+          - java.lang.Exception
+        ignore-exceptions:
+          - com.chirayu.ecommerce.exception.BusinessException
+      customer-service:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+        record-exceptions:
+          - java.lang.Exception
+        ignore-exceptions:
+          - com.chirayu.ecommerce.exception.BusinessException
+      payment-service:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+        record-exceptions:
+          - java.lang.Exception
+        ignore-exceptions:
+          - com.chirayu.ecommerce.exception.BusinessException
+  retry:
+    instances:
+      product-service:
+        max-attempts: 3
+        wait-duration: 2s
+      customer-service:
+        max-attempts: 3
+        wait-duration: 2s
+      payment-service:
+        max-attempts: 3
+        wait-duration: 2s
+  timelimiter:
+    instances:
+      product-service:
+        timeout-duration: 3s
+      customer-service:
+        timeout-duration: 3s
+      payment-service:
+        timeout-duration: 3s
