@@ -11,6 +11,7 @@ import com.chirayu.ecommerce.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -77,5 +78,16 @@ public class ProductServicesImpl implements ProductService {
                 .stream()
                 .map(mapper::toProductResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public String addQuantity(Long productId, double quantityToAdd) {
+       var product = productRepository.findById(productId)
+                .orElseThrow(()-> new EntityNotFoundException("Product not found with the ID :: "+productId));
+       product.setAvailableQuantity(product.getAvailableQuantity()+quantityToAdd);
+       productRepository.save(product);
+        return "Quantity updated successfully. New available quantity: "
+                + product.getAvailableQuantity();
     }
 }

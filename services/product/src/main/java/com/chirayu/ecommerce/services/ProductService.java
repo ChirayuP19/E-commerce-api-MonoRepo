@@ -16,4 +16,6 @@ public interface ProductService {
     ProductResponse findById(Long productId);
 
     List<ProductResponse> findAll();
+
+    String addQuantity(Long productId, double quantityToAdd);
 }
