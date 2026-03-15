@@ -4,6 +4,7 @@ import com.chirayu.ecommerce.dto.OrderRequest;
 import com.chirayu.ecommerce.dto.OrderResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,9 +25,16 @@ public class OrderController {
         return new ResponseEntity<>(service.createOrder(orderRequest), HttpStatus.CREATED);
     }
 
+//    @GetMapping
+//    public ResponseEntity<List<OrderResponse>> findAll(){
+//        return new ResponseEntity<>(service.findAll(),HttpStatus.OK);
+//    }
+
     @GetMapping
-    public ResponseEntity<List<OrderResponse>> findAll(){
-        return new ResponseEntity<>(service.findAll(),HttpStatus.OK);
+    public ResponseEntity<Page<OrderResponse>> findAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(service.findAll(page, size));
     }
 
     @GetMapping("/{order-id}")

@@ -13,12 +13,14 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import com.chirayu.ecommerce.mapper.OrderMapper;
 import com.chirayu.ecommerce.orderline.OrderLineRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import com.chirayu.ecommerce.repository.OrderRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -79,11 +81,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderResponse> findAll() {
-        return orderRepository.findAll()
-                .stream()
-                .map(mapper::fromOrder)
-                .toList();
+    public Page<OrderResponse> findAll(int page, int size) {
+        var pageable= PageRequest.of(page,size, Sort.by("id").ascending());
+        return orderRepository.findAll(pageable)
+                .map(mapper::fromOrder);
     }
 
     @Override
