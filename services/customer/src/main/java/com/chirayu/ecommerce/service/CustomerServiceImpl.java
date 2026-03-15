@@ -15,6 +15,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -97,6 +98,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @PostConstruct
+    @Async
     public void syncToElasticsearch() {
         int page = 0;
         int size = 500;
