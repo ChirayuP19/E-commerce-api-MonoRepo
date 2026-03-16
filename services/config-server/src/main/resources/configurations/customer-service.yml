@@ -23,3 +23,10 @@ management:
       server:
         requests:
           ignore-patterns: "/actuator/**,/actuator"
+keycloak:
+  server-url: http://localhost:9098
+  realm: micro-services
+  client-id: micro-services-api
+  client-secret: D6MYsd9gBhBRsF2tpRQEGr6tk9hanqHn
+  admin-username: admin
+  admin-password: admin
