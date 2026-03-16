@@ -2,6 +2,7 @@ package com.chirayu.ecommerce.mapper;
 
 import com.chirayu.ecommerce.dto.OrderRequest;
 import com.chirayu.ecommerce.dto.OrderResponse;
+import com.chirayu.ecommerce.dto.OrderStatus;
 import com.chirayu.ecommerce.entity.Order;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,7 @@ public class OrderMapper {
                 .totalAmount(totalAmount)
                 .paymentMethod(orderRequest.paymentMethod())
                 .customerId(orderRequest.customerId())
+                .orderStatus(OrderStatus.PENDING)
                 .build();
     }
 
@@ -26,7 +28,10 @@ public class OrderMapper {
                 order.getReference(),
                 order.getTotalAmount(),
                 order.getPaymentMethod(),
-                order.getCustomerId()
+                order.getCustomerId(),
+                order.getOrderStatus() !=null ? order.getOrderStatus():OrderStatus.PENDING,
+                order.getCreateAt(),
+                order.getLastModifiedDate()
         );
     }
 }
