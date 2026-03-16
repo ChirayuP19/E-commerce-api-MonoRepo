@@ -11,9 +11,6 @@ import java.util.List;
 
 public record OrderRequest(
         Long id,
-//        String reference,
-//        @Positive(message = "Order amount should be positive")
-//        BigDecimal amount,
         @NotNull(message = "Payment method should be precised")
         PaymentMethod paymentMethod,
         @NotNull(message = "Customer should be present")

@@ -12,6 +12,14 @@ spring:
 server:
   port: 8090
 management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus, metrics
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
   tracing:
     sampling:
       probability: 1.0
@@ -23,6 +31,10 @@ management:
       server:
         requests:
           ignore-patterns: "/actuator/**,/actuator"
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 keycloak:
   server-url: http://localhost:9098
   realm: micro-services

@@ -3,7 +3,9 @@ package com.chirayu.ecommerce.service;
 import com.chirayu.ecommerce.customer.CustomerServiceClient;
 import com.chirayu.ecommerce.dto.OrderRequest;
 import com.chirayu.ecommerce.dto.OrderResponse;
+import com.chirayu.ecommerce.dto.OrderStatus;
 import com.chirayu.ecommerce.dto.PurchaseRequest;
+import com.chirayu.ecommerce.exception.BusinessException;
 import com.chirayu.ecommerce.kafka.OrderConfirmation;
 import com.chirayu.ecommerce.kafka.OrderProducer;
 import com.chirayu.ecommerce.payment.PaymentRequest;
@@ -23,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import static java.lang.String.format;
+
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
@@ -40,12 +44,11 @@ public class OrderServiceImpl implements OrderService {
     public Long createOrder(OrderRequest orderRequest) {
         var customer = customerServiceClient.findCustomerById(orderRequest.customerId());
         var purchaseProduct = productClient.purchaseProduct(orderRequest.products());
-        var reference= UUID.randomUUID().toString();
-        var totalAmount= purchaseProduct.stream()
-                .map(p->p.price().multiply(BigDecimal.valueOf(p.quantity())))
-                .reduce(BigDecimal.ZERO,BigDecimal::add);
-        var order = orderRepository.save(mapper.toOrder(orderRequest,reference,totalAmount));
-
+        var reference = UUID.randomUUID().toString();
+        var totalAmount = purchaseProduct.stream()
+                .map(p -> p.price().multiply(BigDecimal.valueOf(p.quantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        var order = orderRepository.save(mapper.toOrder(orderRequest, reference, totalAmount));
 
 
         for (PurchaseRequest purchaseRequest : orderRequest.products()) {
@@ -82,7 +85,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Page<OrderResponse> findAll(int page, int size) {
-        var pageable= PageRequest.of(page,size, Sort.by("id").ascending());
+        var pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         return orderRepository.findAll(pageable)
                 .map(mapper::fromOrder);
     }
@@ -91,8 +94,52 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse findById(Long orderId) {
         return orderRepository.findById(orderId)
                 .map(mapper::fromOrder)
-                .orElseThrow(()->new EntityNotFoundException(String.format("No order found with the provided ID: %d",orderId)));
-
+                .orElseThrow(() -> new EntityNotFoundException(format("No order found with the provided ID: %d", orderId)));
     }
 
+    @Override
+    @Transactional
+    public OrderResponse updateOrderStatus(Long orderId, OrderStatus status) {
+        var order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        format("No order found with the provided ID: %d", orderId)));
+
+        validateStatusTransition(order.getOrderStatus(), status);
+        order.setOrderStatus(status);
+        return mapper.fromOrder(orderRepository.save(order));
+    }
+
+    public void validateStatusTransition(OrderStatus current, OrderStatus next) {
+        if (current == null) {
+            if (next != OrderStatus.PENDING) {
+                throw new BusinessException("Order status must start from PENDING");
+            }
+            return;
+        }
+        switch (current) {
+            case PENDING -> {
+                if (next != OrderStatus.CONFIRMED && next != OrderStatus.CANCELLED)
+                    throw new BusinessException(
+                            "PENDING order can only move to CONFIRMED or CANCELLED");
+            }
+            case CONFIRMED -> {
+                if (next != OrderStatus.PROCESSING && next != OrderStatus.CANCELLED)
+                    throw new BusinessException(
+                            "CONFIRMED order can only move to PROCESSING or CANCELLED");
+
+            }
+            case PROCESSING -> {
+                if (next != OrderStatus.SHIPPED)
+                    throw new BusinessException(
+                            "PROCESSING order can only move to SHIPPED");
+            }
+            case SHIPPED -> {
+                if (next != OrderStatus.DELIVERED)
+                    throw new BusinessException(
+                            "SHIPPED order can only move to DELIVERED");
+            }
+            case DELIVERED -> throw new BusinessException(
+                    "Order in " + current + " status cannot be updated");
+        }
+    }
 }

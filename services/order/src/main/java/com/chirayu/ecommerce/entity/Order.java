@@ -1,5 +1,6 @@
 package com.chirayu.ecommerce.entity;
 
+import com.chirayu.ecommerce.dto.OrderStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,6 +32,9 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
     private String customerId;
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(255) default 'PENDING'")
+    private OrderStatus orderStatus;
     @OneToMany(mappedBy = "order")
     private List<OrderLine> orderLines;
     @CreatedDate
