@@ -6,6 +6,7 @@ import com.chirayu.ecommerce.dto.CustomerRequest;
 import com.chirayu.ecommerce.dto.CustomerResponse;
 import com.chirayu.ecommerce.exception.CustomerExistException;
 import com.chirayu.ecommerce.exception.CustomerNotFoundException;
+import com.chirayu.ecommerce.keycloak.KeycloakService;
 import com.chirayu.ecommerce.mapper.CustomerMapper;
 import com.chirayu.ecommerce.repository.CustomerRepository;
 import com.chirayu.ecommerce.repository.CustomerSearchRepository;
@@ -28,6 +29,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerSearchRepository searchRepository;
     private final CustomerMapper mapper;
+    private final KeycloakService keycloakService;
 
     @Override
     public String createCustomer(CustomerRequest request) {
@@ -35,6 +37,23 @@ public class CustomerServiceImpl implements CustomerService {
             throw new CustomerExistException(request.email()+" is already exist");
         }
         var customer = customerRepository.save(mapper.toCustomer(request));
+
+        searchRepository.save(CustomerDocument.builder()
+                .id(customer.getId())
+                .firstname(customer.getFirstname())
+                .lastname(customer.getLastname())
+                .email(customer.getEmail())
+                .build());
+
+        if (request.username()!= null && request.password() != null){
+            keycloakService.createUser(
+                    request.username(),
+                    request.password(),
+                    request.email(),
+                    request.firstname(),
+                    request.lastname()
+            );
+        }
         return customer.getId();
     }
 
@@ -64,7 +83,12 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public void deleteById(String customerId) {
+        var customer=customerRepository.findById(customerId)
+                .orElseThrow(()->new CustomerNotFoundException(
+                        format("No customer found with the provided ID:: %s", customerId)));
         customerRepository.deleteById(customerId);
+        searchRepository.deleteById(customerId);
+        keycloakService.deleteUser(customer.getEmail());
     }
 
     @Override
