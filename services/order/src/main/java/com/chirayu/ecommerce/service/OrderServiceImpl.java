@@ -1,5 +1,6 @@
 package com.chirayu.ecommerce.service;
 
+import com.chirayu.ecommerce.coupon.CouponServiceClient;
 import com.chirayu.ecommerce.customer.CustomerServiceClient;
 import com.chirayu.ecommerce.dto.OrderRequest;
 import com.chirayu.ecommerce.dto.OrderResponse;
@@ -34,6 +35,7 @@ public class OrderServiceImpl implements OrderService {
     private final CustomerServiceClient customerServiceClient;
     private final ProductClientImpl productClient;
     private final PaymentServiceClient paymentServiceClient;
+    private final CouponServiceClient couponServiceClient;
     private final OrderRepository orderRepository;
     private final OrderMapper mapper;
     private final OrderLineService orderLineService;
@@ -48,7 +50,15 @@ public class OrderServiceImpl implements OrderService {
         var totalAmount = purchaseProduct.stream()
                 .map(p -> p.price().multiply(BigDecimal.valueOf(p.quantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        var order = orderRepository.save(mapper.toOrder(orderRequest, reference, totalAmount));
+        var finalAmount=totalAmount;
+        if(orderRequest.couponCode() !=null && !orderRequest.couponCode().isBlank()){
+            var couponResponse=couponServiceClient.validateCoupon(
+                    orderRequest.couponCode(),
+                    totalAmount
+            );
+            finalAmount=couponResponse.finalAmount();
+        }
+        var order = orderRepository.save(mapper.toOrder(orderRequest, reference, finalAmount));
 
 
         for (PurchaseRequest purchaseRequest : orderRequest.products()) {
@@ -64,7 +74,7 @@ public class OrderServiceImpl implements OrderService {
 
         paymentServiceClient.requestPayment(new PaymentRequest(
                 null,
-                totalAmount,
+                finalAmount,
                 orderRequest.paymentMethod(),
                 order.getId(),
                 reference,
@@ -74,7 +84,7 @@ public class OrderServiceImpl implements OrderService {
         orderProducer.sendOrderConfirmation(
                 new OrderConfirmation(
                         reference,
-                        totalAmount,
+                        finalAmount,
                         orderRequest.paymentMethod(),
                         customer,
                         purchaseProduct

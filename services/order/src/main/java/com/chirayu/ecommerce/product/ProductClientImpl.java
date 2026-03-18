@@ -3,7 +3,6 @@ package com.chirayu.ecommerce.product;
 import com.chirayu.ecommerce.dto.PurchaseRequest;
 import com.chirayu.ecommerce.exception.BusinessException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -29,8 +28,7 @@ public class ProductClientImpl implements ProductClient {
     private final RestTemplate restTemplate;
 
     @Override
-    @CircuitBreaker(name = "product-service",fallbackMethod = "purchaseProductFallback")
-    @Retry(name = "product-service")
+    @CircuitBreaker(name = "product-cb", fallbackMethod = "purchaseProductFallback")
     public List<PurchaseResponse> purchaseProduct(List<PurchaseRequest> requestBody) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set(CONTENT_TYPE, APPLICATION_JSON_VALUE);
@@ -50,9 +48,8 @@ public class ProductClientImpl implements ProductClient {
         return responseEntity.getBody();
     }
 
-    public List<PurchaseResponse> purchaseProductFallback(List<PurchaseRequest> request, Throwable ex){
+    public List<PurchaseResponse> purchaseProductFallback(List<PurchaseRequest> request, Throwable ex) {
         throw new BusinessException(
                 "Cannot create order:: Product Service is currently unavailable. Please try again later.");
     }
-
 }

@@ -44,4 +44,10 @@ public class OrderController {
         return new ResponseEntity<>(service.updateOrderStatus(orderId,status),HttpStatus.OK);
     }
 
+    public ResponseEntity<Long> orderRateLimitFallback(
+            OrderRequest orderRequest, Throwable ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .build();
+    }
+
 }

@@ -7,10 +7,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+
 public class CustomerServiceClient {
     private final CustomerClient customerClient;
 
-    @CircuitBreaker(name = "customer-service", fallbackMethod = "customerFallback")
+
+    @CircuitBreaker(name = "customer-cb", fallbackMethod = "customerFallback")
     public CustomerResponse findCustomerById(String customerId) {
         var customer = customerClient.findCustomerFindById(customerId);
         if (customer == null) {
@@ -24,4 +26,5 @@ public class CustomerServiceClient {
         throw new BusinessException(
                 "Cannot create order:: Customer service is currently unavailable. Please try again later.");
     }
+
 }
