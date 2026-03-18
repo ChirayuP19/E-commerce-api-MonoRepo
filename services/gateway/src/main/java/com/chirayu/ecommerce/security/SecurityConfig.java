@@ -42,6 +42,12 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.POST, "/api/v1/payments/**").hasAnyRole("USER", "ADMIN")
                         .pathMatchers(HttpMethod.GET, "/api/v1/payments/**").hasRole("ADMIN")
                         .pathMatchers(HttpMethod.PATCH, "/api/v1/orders/*/status").hasRole("ADMIN")
+                        .pathMatchers(HttpMethod.POST, "/api/v1/coupons/validate").hasAnyRole("USER", "ADMIN")  // specific first
+                        .pathMatchers(HttpMethod.POST, "/api/v1/coupons").hasRole("ADMIN")                      // general after
+                        .pathMatchers(HttpMethod.GET, "/api/v1/coupons").hasRole("ADMIN")
+                        .pathMatchers(HttpMethod.GET, "/api/v1/coupons/**").hasAnyRole("USER", "ADMIN")
+                        .pathMatchers(HttpMethod.DELETE, "/api/v1/coupons/**").hasRole("ADMIN")
+                        .pathMatchers(HttpMethod.PATCH, "/api/v1/coupons/**").hasRole("ADMIN")
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2->oauth2.jwt(

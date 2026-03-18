@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/coupon
+    username: chirayu
+    password: chirayu
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database: POSTGRESQL
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+server:
+  port: 8030
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus, metrics
+  endpoint:
+    health:
+      show-details: ALWAYS
+      show-components: ALWAYS
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+  metrics:
+     export:
+       prometheus:
+         enabled: true
+

@@ -104,6 +104,9 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
     networks:
       microservices-net:
     command:
@@ -183,3 +186,10 @@ volumes:
   mongo:
   prometheus:
   grafana:
+  keycloak:
+  kibana:
+  elasticsearch:
+  mail-dev:
+  zipkin:
+  kafka:
+  zookeeper:

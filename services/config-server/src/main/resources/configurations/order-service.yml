@@ -29,11 +29,12 @@ application:
     customer-url: http://localhost:8090/api/v1/customers
     product-url: http://localhost:8050/api/v1/products
     payment-url: http://localhost:8060/api/v1/payments
+    coupon-url: http://localhost:8030/api/v1/coupons
 management:
   endpoints:
     web:
       exposure:
-        include: health, prometheus, metrics, circuitbreakers, circuitbreakerevents
+        include: "health, prometheus, metrics,circuitbreakers, circuitbreakerevents"
   endpoint:
     health:
       show-details: always
@@ -54,55 +55,47 @@ management:
 resilience4j:
   circuitbreaker:
     instances:
-      product-service:
+      customer-cb:
         sliding-window-size: 10
         minimum-number-of-calls: 5
         failure-rate-threshold: 50
-        wait-duration-in-open-state: 10s
+        wait-duration-in-open-state: 15s
         permitted-number-of-calls-in-half-open-state: 3
         register-health-indicator: true
         record-exceptions:
           - java.lang.Exception
         ignore-exceptions:
           - com.chirayu.ecommerce.exception.BusinessException
-      customer-service:
+      product-cb:
         sliding-window-size: 10
         minimum-number-of-calls: 5
         failure-rate-threshold: 50
-        wait-duration-in-open-state: 10s
+        wait-duration-in-open-state: 15s
         permitted-number-of-calls-in-half-open-state: 3
         register-health-indicator: true
         record-exceptions:
           - java.lang.Exception
         ignore-exceptions:
           - com.chirayu.ecommerce.exception.BusinessException
-      payment-service:
+      payment-cb:
         sliding-window-size: 10
         minimum-number-of-calls: 5
         failure-rate-threshold: 50
-        wait-duration-in-open-state: 10s
+        wait-duration-in-open-state: 15s
         permitted-number-of-calls-in-half-open-state: 3
         register-health-indicator: true
         record-exceptions:
           - java.lang.Exception
         ignore-exceptions:
           - com.chirayu.ecommerce.exception.BusinessException
-  retry:
-    instances:
-      product-service:
-        max-attempts: 3
-        wait-duration: 2s
-      customer-service:
-        max-attempts: 3
-        wait-duration: 2s
-      payment-service:
-        max-attempts: 3
-        wait-duration: 2s
-  timelimiter:
-    instances:
-      product-service:
-        timeout-duration: 3s
-      customer-service:
-        timeout-duration: 3s
-      payment-service:
-        timeout-duration: 3s
+      coupon-cb:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 15s
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+        record-exceptions:
+          - java.lang.Exception
+        ignore-exceptions:
+          - com.chirayu.ecommerce.exception.BusinessException

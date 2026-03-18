@@ -51,4 +51,22 @@ public class FallbackController {
                 ));
     }
 
+    @RequestMapping("/coupon")
+    public ResponseEntity<Map<String, String>> couponFallback() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Map.of(
+                        STATUS ,ERROR,
+                        MESSAGE, "Coupon Service is currently unavailable. Please try again later."
+                ));
+    }
+
+    @RequestMapping("/default")
+    public ResponseEntity<Map<String, String>> defaultFallback() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Map.of(
+                        STATUS, ERROR,
+                        MESSAGE, "Service is currently unavailable. Please try again later."
+                ));
+    }
+
 }
